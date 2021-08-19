@@ -9,8 +9,8 @@ module NoMissingDocumentation exposing (rule)
 
 import Elm.Syntax.Declaration exposing (Declaration(..))
 import Elm.Syntax.Documentation exposing (Documentation)
-import Elm.Syntax.Node exposing (Node(..))
-import Elm.Syntax.Range exposing (Range)
+import Elm.Syntax.Node as Node exposing (Node(..))
+import Elm.Syntax.Range as Range exposing (Range)
 import Review.Rule as Rule exposing (Direction(..), Error, Rule)
 
 
@@ -66,16 +66,25 @@ throwRuleErrorIfNoDocumentation maybeDocumentationNode range =
 {-| Declaration visitor
 -}
 declarationVisitor : Node Declaration -> List (Error {})
-declarationVisitor (Node range declarationNode) =
-    case declarationNode of
-        AliasDeclaration { documentation } ->
-            throwRuleErrorIfNoDocumentation documentation range
+declarationVisitor node =
+    case Node.value node of
+        AliasDeclaration { documentation, generics, name } ->
+            List.map Node.range generics
+                |> (::) (Node.range name)
+                |> Range.combine
+                |> throwRuleErrorIfNoDocumentation documentation
 
-        FunctionDeclaration { documentation } ->
-            throwRuleErrorIfNoDocumentation documentation range
+        FunctionDeclaration { declaration, documentation } ->
+            Node.value declaration
+                |> .name
+                |> Node.range
+                |> throwRuleErrorIfNoDocumentation documentation
 
-        CustomTypeDeclaration { documentation } ->
-            throwRuleErrorIfNoDocumentation documentation range
+        CustomTypeDeclaration { documentation, generics, name } ->
+            List.map Node.range generics
+                |> (::) (Node.range name)
+                |> Range.combine
+                |> throwRuleErrorIfNoDocumentation documentation
 
         _ ->
             []
