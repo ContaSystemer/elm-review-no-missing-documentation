@@ -42,35 +42,54 @@ sum a b =
             \() ->
                 testRule """module A exposing (..)
 
-type A =
-    String
+type AString = String
+
+type Either a b =
+    Left a | Right b
 
 
-type alias ThisIsATypeAlias =
+type alias RecordType = { a : String, b : Int }
+
+type alias ThisIsATypeAlias phantom =
     A.B.OtherTypeConstructor SomeOtherTypes
 
 sum : Int -> Int -> Int
 sum a b =
     a + b
+
+difference a b =
+    a - b
 """
                     |> Review.Test.expectErrors
                         [ Review.Test.error
                             { message = "No undocumented function/type alias/custom type"
-                            , under = """type A =
-    String"""
+                            , under = "AString"
                             , details = [ "Every top level function/type alias/custom type must be documented" ]
                             }
                         , Review.Test.error
                             { message = "No undocumented function/type alias/custom type"
-                            , under = """type alias ThisIsATypeAlias =
-    A.B.OtherTypeConstructor SomeOtherTypes"""
+                            , under = "Either a b"
                             , details = [ "Every top level function/type alias/custom type must be documented" ]
                             }
                         , Review.Test.error
                             { message = "No undocumented function/type alias/custom type"
-                            , under = """sum : Int -> Int -> Int
-sum a b =
-    a + b"""
+                            , under = "RecordType"
+                            , details = [ "Every top level function/type alias/custom type must be documented" ]
+                            }
+                        , Review.Test.error
+                            { message = "No undocumented function/type alias/custom type"
+                            , under = "ThisIsATypeAlias phantom"
+                            , details = [ "Every top level function/type alias/custom type must be documented" ]
+                            }
+                        , Review.Test.error
+                            { message = "No undocumented function/type alias/custom type"
+                            , under = "sum"
+                            , details = [ "Every top level function/type alias/custom type must be documented" ]
+                            }
+                            |> Review.Test.atExactly { start = { row = 15, column = 1 }, end = { row = 15, column = 4 } }
+                        , Review.Test.error
+                            { message = "No undocumented function/type alias/custom type"
+                            , under = "difference"
                             , details = [ "Every top level function/type alias/custom type must be documented" ]
                             }
                         ]
